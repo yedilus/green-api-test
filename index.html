@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Test_task GREEN-API</title>
+</head>
+<body>
+
+
+    <table border="0" cellpadding="10" cellspacing="0" width="100%">
+        <tr valign="top">
+            
+            <td width="50%">
+                
+                
+                <input type="text" id="idInstance" placeholder="idInstance"><br><br>
+                <input type="text" id="apiTokenInstance" placeholder="apiTokenInstance"><br><br>
+
+            
+                <button onclick="getSettings()">getSettings</button><br><br>
+                <button onclick="getStateInstance()">getStateInstance</button><br><br>
+
+                
+                <input type="text" id="chatId" placeholder="phonenumber"><br><br>
+                <input type="text" id="message" placeholder="Hello world!"><br><br>
+                <button onclick="sendMessage()">sendMessage</button><br><br>
+
+                
+                <input type="text" id="fileChatId" placeholder="phonenumber"><br><br>
+                <input type="text" id="file_url" placeholder="https://my.site.com/lol.jpg"><br><br>
+                <button onclick="sendFileByUrl()">sendFileByUrl</button>
+
+            </td>
+
+            
+            <td width="50%">
+                <h2>Ответ</h2>
+                <textarea id="response" rows="25" cols="60" readonly placeholder="напишите что-нибудь"></textarea>
+            </td>
+
+        </tr>
+    </table>
+
+    <script>
+        function getUrl(method){
+            const id = document.getElementById('idInstance').value.trim();
+            const token = document.getElementById('apiTokenInstance').value.trim();
+
+            if (!id || !token) {
+                alert('Заполните idInstance и apiTokenInstance');
+                return null;
+            }
+
+            return `https://api.green-api.com/waInstance${id}/${method}/${token}`;
+        }
+
+        function printResponse(data) {
+            document.getElementById('response').value = JSON.stringify(data, null, 4);
+        }
+
+        async function getSettings() {
+            const url = getUrl('getSettings');
+            if (!url) return;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                printResponse(data);
+            } catch (e) {
+                printResponse({ error: e.message });
+            }
+        }
+
+        async function getStateInstance() {
+            const url = getUrl('getStateInstance');
+            if (!url) return;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                printResponse(data);
+            } catch (e) {
+                printResponse({ error: e.message });
+            }
+        }
+
+        async function sendMessage() {
+            const url = getUrl('sendMessage');
+            if (!url) return;
+
+            let phone = document.getElementById('chatId').value.trim();
+            const text = document.getElementById('message').value.trim();
+
+            if (!phone || !text) {
+                alert('Заполните номер телефона и текст!');
+                return;
+            }
+
+            if (!phone.includes('@c.us')) {
+                phone = `${phone}@c.us`;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chatId: phone,
+                        message: text
+                    })
+                });
+
+                const data = await response.json();
+                printResponse(data);
+            } catch (e) {
+                printResponse({ error: e.message });
+            }
+        }
+
+        async function sendFileByUrl() {
+            const url = getUrl('sendFileByUrl');
+            if (!url) return;
+
+            let phone = document.getElementById('fileChatId').value.trim();
+            const fileUrl = document.getElementById('file_url').value.trim();
+            
+            if (!phone || !fileUrl) {
+                alert('Заполните номер телефона и ссылку на файл!');
+                return;
+            }
+
+            if (!phone.includes('@c.us')) {
+                phone = `${phone}@c.us`;
+            }
+
+            const fileName = fileUrl.split('/').pop() || 'file';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chatId: phone,
+                        urlFile: fileUrl,
+                        fileName: fileName
+                    })
+                });
+
+                const data = await response.json();
+                printResponse(data);
+            } catch (e) {
+                printResponse({ error: e.message });
+            }
+        }
+    </script>
+
+</body>
+</html>
